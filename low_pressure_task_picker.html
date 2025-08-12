@@ -2,67 +2,104 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>輕鬆任務抽抽機</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>輕鬆任務抽抽機 v3（自動日期）</title>
 <style>
-  body {
-    font-family: sans-serif;
-    text-align: center;
-    background-color: #fefefe;
-    padding: 20px;
-  }
-  h1 {
-    font-size: 1.5em;
-    color: #444;
-  }
-  button {
-    font-size: 1.2em;
-    padding: 15px 30px;
-    background-color: #77bfa3;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    cursor: pointer;
-    margin-top: 20px;
-  }
-  button:hover {
-    background-color: #5ea88e;
-  }
-  #task {
-    font-size: 1.3em;
-    margin-top: 30px;
-    color: #333;
-  }
+  body { font-family: Arial, sans-serif; max-width: 480px; margin: 20px auto; padding: 10px; }
+  h1 { text-align: center; }
+  ul { padding-left: 20px; }
+  li { margin: 8px 0; cursor: pointer; }
+  .done { text-decoration: line-through; color: gray; }
+  .date { font-size: 0.8em; color: #666; margin-left: 8px; }
+  button { margin-left: 10px; }
+  #randomTask { font-weight: bold; margin-top: 20px; text-align: center; }
+  #clearAll { margin-top: 20px; display: block; margin-left: auto; margin-right: auto; }
 </style>
 </head>
 <body>
-  <h1>輕鬆任務抽抽機</h1>
-  <button onclick="pickTask()">抽一個任務</button>
-  <div id="task"></div>
+  <h1>輕鬆任務抽抽機 v3（自動日期）</h1>
+
+  <button id="drawBtn">抽一個任務</button>
+  <div id="randomTask">按「抽一個任務」開始</div>
+
+  <h3>任務清單（點擊任務標記完成/未完成）</h3>
+  <ul id="taskList"></ul>
+
+  <button id="clearAll">重置所有任務狀態</button>
 
 <script>
   const tasks = [
-    "用溫水洗手 30 秒",
-    "換一件乾淨的上衣",
-    "把床上的垃圾丟掉 1 個",
-    "喝一杯水",
-    "把頭髮梳順",
-    "收地上的 1 樣東西",
     "坐著深呼吸 5 次",
-    "把枕頭拍一拍",
-    "把桌上擦一下 10 秒",
-    "用濕紙巾擦手",
-    "把床單拉平",
-    "換掉今天的內褲",
-    "把馬桶沖一次水",
-    "把手機擦一擦",
-    "把衣服折一件"
+    "站起來伸展雙手 10 秒",
+    "喝一杯水",
+    "整理桌面一個小區域",
+    "閉眼放鬆 1 分鐘",
+    "寫下今天一件感謝的事",
+    "走到窗邊深呼吸",
+    "聽一首喜歡的歌",
+    "做個簡單的肩膀轉動",
+    "看遠方 20 秒放鬆眼睛"
   ];
 
-  function pickTask() {
-    const randomIndex = Math.floor(Math.random() * tasks.length);
-    document.getElementById("task").textContent = tasks[randomIndex];
+  const taskListEl = document.getElementById('taskList');
+  const randomTaskEl = document.getElementById('randomTask');
+  const drawBtn = document.getElementById('drawBtn');
+  const clearAllBtn = document.getElementById('clearAll');
+
+  let taskStatus = JSON.parse(localStorage.getItem('taskStatus')) || {};
+
+  function getTodayStr() {
+    const d = new Date();
+    return d.toISOString().slice(0,10);
   }
+
+  function renderTaskList() {
+    taskListEl.innerHTML = '';
+    tasks.forEach((task, index) => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      if (taskStatus[index]) {
+        li.classList.add('done');
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'date';
+        dateSpan.textContent = `(完成於: ${taskStatus[index]})`;
+        li.appendChild(dateSpan);
+      }
+      li.addEventListener('click', () => {
+        if (taskStatus[index]) {
+          delete taskStatus[index];
+        } else {
+          taskStatus[index] = getTodayStr();
+        }
+        localStorage.setItem('taskStatus', JSON.stringify(taskStatus)); // <- 這裡必須更新 localStorage！
+        renderTaskList();
+      });
+      taskListEl.appendChild(li);
+    });
+  }
+
+  function drawTask() {
+    const incompleteTasks = tasks
+      .map((t, i) => ({task: t, index: i}))
+      .filter(item => !taskStatus[item.index]);
+    if (incompleteTasks.length === 0) {
+      randomTaskEl.textContent = "全部任務都完成了！很棒！";
+      return;
+    }
+    const choice = incompleteTasks[Math.floor(Math.random() * incompleteTasks.length)];
+    randomTaskEl.textContent = choice.task;
+  }
+
+  drawBtn.addEventListener('click', drawTask);
+
+  clearAllBtn.addEventListener('click', () => {
+    taskStatus = {};
+    localStorage.setItem('taskStatus', JSON.stringify(taskStatus));
+    randomTaskEl.textContent = "任務狀態已重置，請開始抽取！";
+    renderTaskList();
+  });
+
+  renderTaskList();
 </script>
 </body>
 </html>
