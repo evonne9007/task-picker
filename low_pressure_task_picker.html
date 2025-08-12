@@ -7,6 +7,7 @@
 <style>
   body { font-family: Arial, sans-serif; max-width: 480px; margin: 20px auto; padding: 10px; }
   h1 { text-align: center; }
+  #todayDateDisplay { text-align: center; font-size: 1.1em; margin-bottom: 20px; color: #333; }
   ul { padding-left: 20px; }
   li { margin: 8px 0; cursor: pointer; }
   .done { text-decoration: line-through; color: gray; }
@@ -18,6 +19,9 @@
 </head>
 <body>
   <h1>輕鬆任務抽抽機 v3（自動日期）</h1>
+  
+  <!-- 今天日期顯示區 -->
+  <div id="todayDateDisplay">今天日期：<span id="todayDate"></span></div>
 
   <button id="drawBtn">抽一個任務</button>
   <div id="randomTask">按「抽一個任務」開始</div>
@@ -53,6 +57,16 @@
     return d.toISOString().slice(0,10);
   }
 
+  // 新增：顯示今天日期
+  function updateTodayDate() {
+    const todayEl = document.getElementById('todayDate');
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    todayEl.textContent = `${yyyy}-${mm}-${dd}`;
+  }
+
   function renderTaskList() {
     taskListEl.innerHTML = '';
     tasks.forEach((task, index) => {
@@ -71,7 +85,7 @@
         } else {
           taskStatus[index] = getTodayStr();
         }
-        localStorage.setItem('taskStatus', JSON.stringify(taskStatus)); // <- 這裡必須更新 localStorage！
+        localStorage.setItem('taskStatus', JSON.stringify(taskStatus));
         renderTaskList();
       });
       taskListEl.appendChild(li);
@@ -99,6 +113,8 @@
     renderTaskList();
   });
 
+  // 初始化
+  updateTodayDate();
   renderTaskList();
 </script>
 </body>
