@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>輕鬆任務抽抽機</title>
+<style>
+  body {
+    font-family: sans-serif;
+    text-align: center;
+    background-color: #fefefe;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 1.5em;
+    color: #444;
+  }
+  button {
+    font-size: 1.2em;
+    padding: 15px 30px;
+    background-color: #77bfa3;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+  button:hover {
+    background-color: #5ea88e;
+  }
+  #task {
+    font-size: 1.3em;
+    margin-top: 30px;
+    color: #333;
+  }
+</style>
+</head>
+<body>
+  <h1>輕鬆任務抽抽機</h1>
+  <button onclick="pickTask()">抽一個任務</button>
+  <div id="task"></div>
+
+<script>
+  const tasks = [
+    "用溫水洗手 30 秒",
+    "換一件乾淨的上衣",
+    "把床上的垃圾丟掉 1 個",
+    "喝一杯水",
+    "把頭髮梳順",
+    "收地上的 1 樣東西",
+    "坐著深呼吸 5 次",
+    "把枕頭拍一拍",
+    "把桌上擦一下 10 秒",
+    "用濕紙巾擦手",
+    "把床單拉平",
+    "換掉今天的內褲",
+    "把馬桶沖一次水",
+    "把手機擦一擦",
+    "把衣服折一件"
+  ];
+
+  function pickTask() {
+    const randomIndex = Math.floor(Math.random() * tasks.length);
+    document.getElementById("task").textContent = tasks[randomIndex];
+  }
+</script>
+</body>
+</html>
