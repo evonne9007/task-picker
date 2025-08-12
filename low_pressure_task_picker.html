@@ -1,121 +1,412 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>輕鬆任務抽抽機 v3（自動日期）</title>
-<style>
-  body { font-family: Arial, sans-serif; max-width: 480px; margin: 20px auto; padding: 10px; }
-  h1 { text-align: center; }
-  #todayDateDisplay { text-align: center; font-size: 1.1em; margin-bottom: 20px; color: #333; }
-  ul { padding-left: 20px; }
-  li { margin: 8px 0; cursor: pointer; }
-  .done { text-decoration: line-through; color: gray; }
-  .date { font-size: 0.8em; color: #666; margin-left: 8px; }
-  button { margin-left: 10px; }
-  #randomTask { font-weight: bold; margin-top: 20px; text-align: center; }
-  #clearAll { margin-top: 20px; display: block; margin-left: auto; margin-right: auto; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>輕鬆任務抽抽機 & 清潔計畫</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 1rem;
+      background: #f7f7f7;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    #encouragement {
+      font-weight: bold;
+      font-size: 1.4rem;
+      color: #d6336c;
+      text-align: center;
+      margin-bottom: 1rem;
+      min-height: 2em;
+    }
+    #timeDisplay {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #555;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background-color: #4285f4;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    li {
+      padding: 0.3rem 0.6rem;
+      margin-bottom: 0.3rem;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    li.completed {
+      text-decoration: line-through;
+      color: #888;
+      background: #d0ffd0;
+      border-color: #4caf50;
+    }
+    li:hover {
+      background-color: #e8f0fe;
+      border-color: #4285f4;
+    }
+    .tab-container {
+      margin-top: 1rem;
+      border-bottom: 2px solid #4285f4;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .tab-button {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.4rem 1rem;
+      border-bottom: 3px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .tab-button.active {
+      border-color: #d6336c;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+      margin-top: 1rem;
+      background: white;
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .tab-content.active {
+      display: block;
+    }
+    textarea {
+      width: 100%;
+      height: 220px;
+      margin-top: 0.5rem;
+      font-family: monospace;
+      font-size: 1rem;
+      resize: vertical;
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: #fefefe;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    #dateSelect {
+      width: 150px;
+      padding: 0.3rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-bottom: 0.5rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>輕鬆任務抽抽機 v3（自動日期）</h1>
-  
-  <!-- 今天日期顯示區 -->
-  <div id="todayDateDisplay">今天日期：<span id="todayDate"></span></div>
+  <h1>輕鬆任務抽抽機 & 3天清潔計畫</h1>
 
-  <button id="drawBtn">抽一個任務</button>
-  <div id="randomTask">按「抽一個任務」開始</div>
+  <div id="encouragement">加油！你可以的！不要放棄！</div>
+  <div id="timeDisplay">時間載入中...</div>
 
-  <h3>任務清單（點擊任務標記完成/未完成）</h3>
-  <ul id="taskList"></ul>
+  <div class="tab-container">
+    <button class="tab-button active" data-tab="easyTaskTab">輕鬆任務抽抽機</button>
+    <button class="tab-button" data-tab="cleanTaskTab">3天清潔計畫</button>
+    <button class="tab-button" data-tab="historyTab">完成紀錄</button>
+  </div>
 
-  <button id="clearAll">重置所有任務狀態</button>
+  <div id="easyTaskTab" class="tab-content active">
+    <button id="drawTaskBtn">抽一個任務</button>
+    <button id="resetEasyBtn">重置所有輕鬆任務</button>
+    <p id="drawResult" style="min-height: 2em;"></p>
+    <ul id="easyTaskList"></ul>
+  </div>
 
-<script>
-  const tasks = [
-    "坐著深呼吸 5 次",
-    "站起來伸展雙手 10 秒",
-    "喝一杯水",
-    "整理桌面一個小區域",
-    "閉眼放鬆 1 分鐘",
-    "寫下今天一件感謝的事",
-    "走到窗邊深呼吸",
-    "聽一首喜歡的歌",
-    "做個簡單的肩膀轉動",
-    "看遠方 20 秒放鬆眼睛"
-  ];
+  <div id="cleanTaskTab" class="tab-content">
+    <button id="resetCleanBtn">重置當天清潔計畫任務</button>
+    <p>今天是 <span id="currentCleanDay">Day 1</span></p>
+    <ul id="cleanTaskList"></ul>
+  </div>
 
-  const taskListEl = document.getElementById('taskList');
-  const randomTaskEl = document.getElementById('randomTask');
-  const drawBtn = document.getElementById('drawBtn');
-  const clearAllBtn = document.getElementById('clearAll');
+  <div id="historyTab" class="tab-content">
+    <label for="dateSelect">選擇日期查看完成紀錄：</label>
+    <input type="date" id="dateSelect" />
+    <textarea id="historyRecords" readonly>請選擇日期查看紀錄</textarea>
+  </div>
 
-  let taskStatus = JSON.parse(localStorage.getItem('taskStatus')) || {};
+  <script>
+    // 鼓勵話語陣列，每15秒換一句
+    const encouragementTexts = [
+      "加油！你可以的！",
+      "不要放棄，每一步都算數。",
+      "你已經很棒了，繼續努力！",
+      "每天進步一點點，奇蹟就會出現。",
+      "相信自己，你比你想像的強大。",
+      "即使慢，也是在前進。",
+      "你值得被愛與尊重。",
+      "每次嘗試都值得鼓勵。",
+      "困難是成長的開始。",
+      "給自己一個微笑，你做得很好。"
+    ];
 
-  function getTodayStr() {
-    const d = new Date();
-    return d.toISOString().slice(0,10);
-  }
-
-  // 新增：顯示今天日期
-  function updateTodayDate() {
-    const todayEl = document.getElementById('todayDate');
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    todayEl.textContent = `${yyyy}-${mm}-${dd}`;
-  }
-
-  function renderTaskList() {
-    taskListEl.innerHTML = '';
-    tasks.forEach((task, index) => {
-      const li = document.createElement('li');
-      li.textContent = task;
-      if (taskStatus[index]) {
-        li.classList.add('done');
-        const dateSpan = document.createElement('span');
-        dateSpan.className = 'date';
-        dateSpan.textContent = `(完成於: ${taskStatus[index]})`;
-        li.appendChild(dateSpan);
-      }
-      li.addEventListener('click', () => {
-        if (taskStatus[index]) {
-          delete taskStatus[index];
-        } else {
-          taskStatus[index] = getTodayStr();
-        }
-        localStorage.setItem('taskStatus', JSON.stringify(taskStatus));
-        renderTaskList();
-      });
-      taskListEl.appendChild(li);
-    });
-  }
-
-  function drawTask() {
-    const incompleteTasks = tasks
-      .map((t, i) => ({task: t, index: i}))
-      .filter(item => !taskStatus[item.index]);
-    if (incompleteTasks.length === 0) {
-      randomTaskEl.textContent = "全部任務都完成了！很棒！";
-      return;
+    // 更新鼓勵話語
+    const encouragementEl = document.getElementById('encouragement');
+    let encouragementIndex = 0;
+    function updateEncouragement() {
+      encouragementEl.textContent = encouragementTexts[encouragementIndex];
+      encouragementIndex = (encouragementIndex + 1) % encouragementTexts.length;
     }
-    const choice = incompleteTasks[Math.floor(Math.random() * incompleteTasks.length)];
-    randomTaskEl.textContent = choice.task;
-  }
+    updateEncouragement();
+    setInterval(updateEncouragement, 15000);
 
-  drawBtn.addEventListener('click', drawTask);
+    // 時間顯示 (台北時間)
+    const timeDisplayEl = document.getElementById('timeDisplay');
+    function updateTime() {
+      const now = new Date();
+      const taipeiTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+      const Y = taipeiTime.getFullYear();
+      const M = (taipeiTime.getMonth() + 1).toString().padStart(2, '0');
+      const D = taipeiTime.getDate().toString().padStart(2, '0');
+      const h = taipeiTime.getHours().toString().padStart(2, '0');
+      const m = taipeiTime.getMinutes().toString().padStart(2, '0');
+      const s = taipeiTime.getSeconds().toString().padStart(2, '0');
+      timeDisplayEl.textContent = `台北時間：${Y}-${M}-${D} ${h}:${m}:${s}`;
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
 
-  clearAllBtn.addEventListener('click', () => {
-    taskStatus = {};
-    localStorage.setItem('taskStatus', JSON.stringify(taskStatus));
-    randomTaskEl.textContent = "任務狀態已重置，請開始抽取！";
-    renderTaskList();
-  });
+    // 任務資料與狀態儲存鍵
+    const EASY_STORAGE_KEY = 'easyTasksStatus';
+    const CLEAN_STORAGE_KEY = 'cleanTasksStatus';
+    const HISTORY_STORAGE_KEY = 'tasksCompletionHistory';
 
-  // 初始化
-  updateTodayDate();
-  renderTaskList();
-</script>
+    // 輕鬆任務清單
+    const easyTasks = [
+      "坐著深呼吸 5 次",
+      "喝一杯水",
+      "伸展手臂和肩膀 2 分鐘",
+      "做簡單的頸部轉動 1 分鐘",
+      "閉眼靜坐 3 分鐘",
+      "走到窗邊看遠方 1 分鐘",
+      "輕輕按摩頭皮 2 分鐘",
+      "做幾個肩膀聳動動作",
+      "聽喜歡的音樂 5 分鐘",
+      "微笑面對鏡子 1 分鐘"
+    ];
+
+    // 3天清潔計畫任務列表
+    const cleanTasks = {
+      Day1: [
+        "準備一套乾淨的衣物 & 內褲（先不管床包）",
+        "沖全身（約1分鐘）",
+        "用洗髮精洗頭（可兩天一次，如今天沒力可下次）",
+        "用沐浴乳或肥皂擦腋下、胸口、私密處、大腿內側、腳",
+        "其他部位今天可只沖水",
+        "用大毛巾擦乾，換上乾淨衣物",
+        "播放3～4分鐘喜歡的歌曲當洗澡計時器"
+      ],
+      Day2: [
+        "找小盆子，倒溫水（不要熱水）",
+        "內褲/褲子用肥皂搓一搓，泡著，過陣子再沖洗",
+        "洗好晾起來（不用一次洗全部髒衣服，只先洗這批）"
+      ],
+      Day3: [
+        "如果體力夠 → 換一套乾淨床單（房間其他地方亂沒關係）",
+        "如果沒力 → 丟掉床上垃圾或用小毛巾擦睡覺範圍"
+      ]
+    };
+
+    // 計算今天是哪一天（Day1/2/3）
+    function getCleanDay() {
+      const startDate = new Date('2025-01-01'); // 可自行調整起始日
+      const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+      const diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+      const dayCycle = diffDays % 3;
+      return ['Day1', 'Day2', 'Day3'][dayCycle];
+    }
+
+    // 初始化並渲染輕鬆任務
+    const easyTaskListEl = document.getElementById('easyTaskList');
+    const drawResultEl = document.getElementById('drawResult');
+    let easyTasksStatus = JSON.parse(localStorage.getItem(EASY_STORAGE_KEY)) || easyTasks.map(() => false);
+
+    function saveEasyTasks() {
+      localStorage.setItem(EASY_STORAGE_KEY, JSON.stringify(easyTasksStatus));
+      saveHistory();
+    }
+
+    function renderEasyTasks() {
+      easyTaskListEl.innerHTML = '';
+      easyTasks.forEach((task, i) => {
+        const li = document.createElement('li');
+        li.textContent = task;
+        if (easyTasksStatus[i]) li.classList.add('completed');
+        li.onclick = () => {
+          easyTasksStatus[i] = !easyTasksStatus[i];
+          saveEasyTasks();
+          renderEasyTasks();
+        };
+        easyTaskListEl.appendChild(li);
+      });
+    }
+    renderEasyTasks();
+
+    // 初始化並渲染清潔計畫任務
+    const cleanTaskListEl = document.getElementById('cleanTaskList');
+    const currentCleanDayEl = document.getElementById('currentCleanDay');
+    let cleanTasksStatus = JSON.parse(localStorage.getItem(CLEAN_STORAGE_KEY)) || {Day1: [], Day2: [], Day3: []};
+
+    ['Day1', 'Day2', 'Day3'].forEach(day => {
+      if (!Array.isArray(cleanTasksStatus[day]) || cleanTasksStatus[day].length !== cleanTasks[day].length) {
+        cleanTasksStatus[day] = new Array(cleanTasks[day].length).fill(false);
+      }
+    });
+
+    function saveCleanTasks() {
+      localStorage.setItem(CLEAN_STORAGE_KEY, JSON.stringify(cleanTasksStatus));
+      saveHistory();
+    }
+
+    function renderCleanTasks() {
+      const day = getCleanDay();
+      currentCleanDayEl.textContent = day.replace('Day', 'Day ');
+      cleanTaskListEl.innerHTML = '';
+      cleanTasks[day].forEach((task, i) => {
+        const li = document.createElement('li');
+        li.textContent = task;
+        if (cleanTasksStatus[day][i]) li.classList.add('completed');
+        li.onclick = () => {
+          cleanTasksStatus[day][i] = !cleanTasksStatus[day][i];
+          saveCleanTasks();
+          renderCleanTasks();
+        };
+        cleanTaskListEl.appendChild(li);
+      });
+    }
+    renderCleanTasks();
+
+    // 按鈕事件
+    document.getElementById('drawTaskBtn').onclick = () => {
+      // 從未完成任務中抽一個
+      const unfinished = easyTasksStatus.map((done, idx) => !done ? idx : -1).filter(i => i !== -1);
+      if (unfinished.length === 0) {
+        drawResultEl.textContent = "你已完成所有輕鬆任務，請重置或休息一下。";
+        return;
+      }
+      const pickIndex = unfinished[Math.floor(Math.random() * unfinished.length)];
+      drawResultEl.textContent = easyTasks[pickIndex];
+    };
+
+    document.getElementById('resetEasyBtn').onclick = () => {
+      if (confirm("確定要重置所有輕鬆任務的完成狀態嗎？")) {
+        easyTasksStatus = easyTasks.map(() => false);
+        saveEasyTasks();
+        renderEasyTasks();
+        drawResultEl.textContent = '';
+      }
+    };
+
+    document.getElementById('resetCleanBtn').onclick = () => {
+      if (confirm("確定要重置今日清潔計畫的完成狀態嗎？")) {
+        const day = getCleanDay();
+        cleanTasksStatus[day] = cleanTasks[day].map(() => false);
+        saveCleanTasks();
+        renderCleanTasks();
+      }
+    };
+
+    // 紀錄完成狀態的歷史記錄功能
+    const dateSelectEl = document.getElementById('dateSelect');
+    const historyRecordsEl = document.getElementById('historyRecords');
+
+    function saveHistory() {
+      const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+      const Y = now.getFullYear();
+      const M = (now.getMonth() + 1).toString().padStart(2, '0');
+      const D = now.getDate().toString().padStart(2, '0');
+      const dateKey = `${Y}-${M}-${D}`;
+
+      let history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || {};
+      history[dateKey] = {
+        easy: easyTasksStatus,
+        clean: cleanTasksStatus
+      };
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    }
+
+    function loadHistory(dateKey) {
+      let history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || {};
+      if (history[dateKey]) {
+        const record = history[dateKey];
+        let text = `日期：${dateKey}\n\n輕鬆任務完成狀態：\n`;
+        record.easy.forEach((done, i) => {
+          text += ` - ${easyTasks[i]} : ${done ? "完成" : "未完成"}\n`;
+        });
+        text += `\n3天清潔計畫任務完成狀態：\n`;
+        ['Day1', 'Day2', 'Day3'].forEach(day => {
+          text += `  ${day}：\n`;
+          record.clean[day].forEach((done, i) => {
+            text += `   - ${cleanTasks[day][i]} : ${done ? "完成" : "未完成"}\n`;
+          });
+          text += "\n";
+        });
+        historyRecordsEl.value = text;
+      } else {
+        historyRecordsEl.value = "該日期無紀錄。";
+      }
+    }
+
+    dateSelectEl.onchange = () => {
+      if (dateSelectEl.value) {
+        loadHistory(dateSelectEl.value);
+      } else {
+        historyRecordsEl.value = "請選擇日期查看紀錄";
+      }
+    };
+
+    // Tab切換功能
+    const tabs = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.getAttribute('data-tab');
+        tabContents.forEach(tc => {
+          tc.classList.toggle('active', tc.id === target);
+        });
+      });
+    });
+
+    // 頁面載入時自動儲存一次狀態(避免資料遺失)
+    saveEasyTasks();
+    saveCleanTasks();
+  </script>
 </body>
 </html>
+
